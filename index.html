@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nutrition Running Game</title>
-
     <style>
         body {
             margin: 0;
@@ -110,12 +109,23 @@
 
 
         #mainMenu button,
-        #objectives button #leaderbord button #instructions button {
-            font-size: 22px;
-            padding: 12px 30px;
-            border-radius: 15px;
-            cursor: pointer;
-        }
+    #objectives button,
+    #leaderboard button,
+    #instructions button {
+
+    font-size:22px;
+    padding:12px 30px;
+    border-radius:15px;
+    cursor:pointer;
+
+}
+#leaderboard p{
+    font-size:18px;
+}
+
+#leaderboard h3{
+    font-size:22px;
+}
     </style>
 </head>
 
@@ -152,12 +162,13 @@
         <br><br>
 
         <button onclick="showObjectives()">
-            🎯 GAME OBJECTIVES
+            🎯 GAME OBJECTIVES 
         </button>
         <br><br>
 
         <button onclick="showLeaderboard()">
             🏆 LEADERBOARD
+            
         </button>
 
     </div>
@@ -207,10 +218,11 @@
         <h2>📖 How to Play</h2>
 
         <p>
-            🏃 Run and jump over unhealthy food<br>
-            🍎 Collect healthy food<br>
-            ⏸️ Use pause button when needed<br>
-            🎯 Reach 2000 score to win
+            ⬅️ Move and jump to avoid obstacles<br>
+        🍎 Collect healthy foods for extra points<br>
+       🍟 Avoid junk foods or the game will end<br>
+        ⏸️ Press pause if you need a break<br>
+        🏆 Reach the target score to win
         </p>
         <button onclick="backMenu()">
             ⬅️ BACK
@@ -222,13 +234,12 @@
         <h2>🎯 Game Objectives</h2>
 
         <p>
-            🥦 Collect healthy foods<br>
-            🍎 Gain points by eating nutritious food<br>
-            🏃 Avoid unhealthy foods like 🍔🍟🥤<br>
-            ⭐ Unlock 5 Nutrition Levels<br>
-            🔥 Survive as the game gets faster<br>
-            🏆 Reach 2000 score and become Nutrition Champion!<br>
-            Creator:<br> Brian Jake Tenebro
+            🥦 Collect healthy foods to earn points<br> 
+            🍔 Avoid unhealthy foods<br>
+            🏃 Survive and reach the highest score<br>
+            ⭐ Unlock new nutrition levels<br>
+            🏆 Become the Nutrition Champion!<br>
+            
         </p>
 
         <button onclick="backMenu()">
@@ -270,7 +281,19 @@
         <button onclick="creatorReset()" style="font-size:22px;">
             🔒 CREATOR RESET
         </button>
-    </div>
+        <br><br>
+
+<hr>
+
+<h3>👤 Game Credits</h3>
+
+<p>
+🎮 Game Title: Nutrition Adventure<br>
+👨‍💻 Created by: Brian Jake Tenebro<br>
+🥦 Theme: Nutrition Month Game<br>
+💻 Developed using: HTML, CSS, JavaScript<br>
+⭐ Thank you for playing!
+</p>
     </div>
 
 
@@ -599,17 +622,20 @@
 
             document.getElementById('score').textContent = score;
 
-            if (score >= 2000) {
+           if (score >= 5000) {
 
 
-                gameOver = true;
-                return;
-                saveHighScore();
+    gameOver = true;
 
-                document.getElementById("resultText").innerHTML =
-                    "YOU WIN! 🏆🎉<br>Nutrition Champion!";
-                document.getElementById("message").style.display = "block";
-            }
+    saveHighScore();
+
+    document.getElementById("resultText").innerHTML =
+        "YOU WIN! 🏆🎉<br>Nutrition Champion!";
+
+    document.getElementById("message").style.display = "block";
+
+    return;
+}
 
             checkLevel();
             if (level == 2) {
@@ -636,12 +662,10 @@
 
             let oldLevel = level;
 
-            if (score >= 2000) {
-                level = 5;
-
-
-            }
-            else if (score >= 1500) {
+            if (score >= 4000) {
+        level = 5;
+                    }
+            else if (score >= 2500) {
                 level = 4;
             }
             else if (score >= 1000) {
@@ -696,46 +720,81 @@
         }
 
 
-        function backMenu() {
+     function backMenu() {
 
-            gameOver = false;
-            paused = false;
+    // Save score before leaving
+    if(score > 0){
+        saveHighScore();
+    }
+    player.x = 100;
+player.y = 300;
+player.vy = 0;
+player.grounded = true;
 
-            document.getElementById("instructions").style.display = "none";
-            document.getElementById("startScreen").style.display = "none";
-            document.getElementById("mainMenu").style.display = "block";
-            document.getElementById("objectives").style.display = "none";
-            document.getElementById("leaderboard").style.display = "none";
+    // STOP SPAWNING
+    clearInterval(obstacleLoop);
+    clearInterval(foodLoop);
 
-
-            // Reset game
-            score = 0;
-            level = 1;
-            speed = 6;
-
-            obstacles = [];
-            foods = [];
-
-
-            document.getElementById("score").textContent = 0;
-            document.getElementById("level").textContent = 1;
+    // STOP GAME
+    gameOver = false;
+    paused = false;
 
 
-            // RESET PLAYER NAME
-            playerName = "";
+    // RESET GAME VALUES
+    score = 0;
+    level = 1;
+    speed = 6;
+    baseSpeed = 5;
 
-            // CLEAR NAME INPUT BOX
-            document.getElementById("playerName").value = "";
+    obstacles = [];
+    foods = [];
 
 
-            // Reset player display
-            document.getElementById("info").innerHTML =
-                "Player: Guest <br>" +
-                "Score: <span id='score'>0</span>" +
-                " | Level: <span id='level'>1</span>";
+    // RESET PLAYER
+    player.x = 100;
+    player.y = 300;
+    player.vy = 0;
+    player.grounded = true;
 
-        }
-        function saveHighScore() {
+
+    // RESET MESSAGE
+    document.getElementById("message").style.display = "none";
+    document.getElementById("levelUp").style.display = "none";
+
+
+    // HIDE ALL SCREENS
+    document.getElementById("instructions").style.display = "none";
+    document.getElementById("startScreen").style.display = "none";
+    document.getElementById("objectives").style.display = "none";
+    document.getElementById("leaderboard").style.display = "none";
+
+
+    // SHOW MAIN MENU
+    document.getElementById("mainMenu").style.display = "block";
+
+
+    // RESET PLAYER NAME
+    playerName = "";
+    document.getElementById("playerName").value = "";
+
+
+    // RESET DISPLAY
+    document.getElementById("info").innerHTML =
+        "Player: Guest <br>" +
+        "Score: <span id='score'>0</span>" +
+        " | Level: <span id='level'>1</span>";
+
+
+    // RESET BUTTON
+    document.getElementById("pauseBtn").innerHTML = "⏸️ PAUSE";
+
+
+    // CLEAR CANVAS
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+}
+
+function saveHighScore() {
 
             if (difficulty == "easy") {
 
@@ -784,42 +843,43 @@
         }
 
 
-        function restartGame() {
+       function restartGame() {
 
-            // Reset score and level
-            score = 0;
-            level = 1;
-            speed = baseSpeed;
+    score = 0;
+    level = 1;
+    speed = baseSpeed;
 
-            // Reset game status
-            gameOver = false;
-            paused = false;
+    gameOver = false;
+    paused = false;
 
-            // Clear objects
-            obstacles = [];
-            foods = [];
+    obstacles = [];
+    foods = [];
 
-            // Reset player position
-            player.y = 300;
-            player.vy = 0;
-            player.grounded = true;
+    // Reset player
+    player.x = 100;
+    player.y = 300;
+    player.vy = 0;
+    player.grounded = true;
 
-            // Reset display
-            document.getElementById("score").textContent = 0;
-            document.getElementById("level").textContent = 1;
 
-            // Hide game over message
-            document.getElementById("message").style.display = "none";
+    // Reset display
+    document.getElementById("score").textContent = "0";
+    document.getElementById("level").textContent = "1";
 
-            // Reset pause button
-            document.getElementById("pauseBtn").innerHTML = "⏸️ PAUSE";
 
-            // Start spawning again
-            startSpawning();
+    // Hide game over
+    document.getElementById("message").style.display = "none";
 
-            // Start game loop
-            update();
-        }
+
+    // Restart spawn
+    startSpawning();
+
+
+    // Start animation again
+    requestAnimationFrame(update);
+
+}
+        
         function startGame() {
 
             playerName = document.getElementById("playerName").value;
