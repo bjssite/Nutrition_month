@@ -88,19 +88,10 @@ canvas{
     color:white;
     border:none;
 }
-#mainMenu{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    background:white;
-    padding:40px;
-    border-radius:20px;
-    text-align:center;
-    font-size:25px;
-}
 #mainMenu,
-#instructions{
+#instructions,
+#objectives,
+#leaderboard{
     position:absolute;
     top:50%;
     left:50%;
@@ -114,33 +105,15 @@ canvas{
 
 
 #mainMenu button,
+#objectives button
+#leaderbord button
 #instructions button{
     font-size:22px;
     padding:12px 30px;
     border-radius:15px;
     cursor:pointer;
 }
-#mainMenu,
-#objectives{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    background:white;
-    padding:40px;
-    border-radius:20px;
-    text-align:center;
-    font-size:25px;
-}
 
-
-#mainMenu button,
-#objectives button{
-    font-size:22px;
-    padding:12px 30px;
-    border-radius:15px;
-    cursor:pointer;
-}
 </style>
 </head>
 <body>
@@ -148,13 +121,13 @@ canvas{
 <div id="message">
     <span id="resultText">GAME OVER</span><br>
 
-   <button onclick="restartGame()" style="font-size:50px;margin-top:150px;">
+   <button onclick="restartGame()" style="font-size:30px;margin-top:150px;">
 🔄 Play Again
 </button>
 
 <br><br>
 
-<button onclick="backMenu()" style="font-size: 50px;margin-top:10px;">
+<button onclick="backMenu()" style="font-size: 30px;margin-top:10px;">
 🏠 Main Menu
 </button>
 </div>
@@ -178,6 +151,11 @@ canvas{
 <button onclick="showObjectives()">
 🎯 GAME OBJECTIVES
 </button>
+<br><br>
+
+<button onclick="showLeaderboard()">
+🏆 LEADERBOARD
+</button>
 
 </div>
 <canvas id="game" width="900" height="400"></canvas>
@@ -193,7 +171,7 @@ canvas{
     Score: <span id="score">0</span>
     |
     Level: <span id="level">1</span>
-</div
+</div>
 
 <div id="levelUp"></div>
 
@@ -229,7 +207,7 @@ canvas{
 🏃 Run and jump over unhealthy food<br>
 🍎 Collect healthy food<br>
 ⏸️ Use pause button when needed<br>
-🎯 Reach 5000 score to win
+🎯 Reach 2000 score to win
 </p>
 <button onclick="backMenu()">
 ⬅️ BACK
@@ -246,7 +224,8 @@ canvas{
 🏃 Avoid unhealthy foods like 🍔🍟🥤<br>
 ⭐ Unlock 5 Nutrition Levels<br>
 🔥 Survive as the game gets faster<br>
-🏆 Reach 2000 score and become Nutrition Champion!
+🏆 Reach 2000 score and become Nutrition Champion!<br>
+Creator: Brian Jake Tenebro
 </p>
 
 <button onclick="backMenu()">
@@ -254,23 +233,45 @@ canvas{
 </button>
 
 </div>
-    jump.mp3
-eat.mp3
-hit.mp3
-levelup.mp3
-win.mp3
+ <div id="leaderboard" style="display:none;">
+
+<h2>🏆 Nutrition Leaderboard</h2>
+
+<h3>😊 Easy Mode</h3>
+<p>
+🥇 Score: <span id="easyHigh">0</span><br>
+👑 Player: <span id="easyName">Nobody</span>
+</p>
+
+
+<h3>😐 Normal Mode</h3>
+<p>
+🥇 Score: <span id="normalHigh">0</span><br>
+👑 Player: <span id="normalName">Nobody</span>
+</p>
+
+
+<h3>🔥 Hard Mode</h3>
+<p>
+🥇 Score: <span id="hardHigh">0</span><br>
+👑 Player: <span id="hardName">Nobody</span>
+</p>
+
+
+<button onclick="backMenu()">
+⬅️ BACK
+</button>
+
+<br><br> 
+
+<button onclick="creatorReset()" style="font-size:22px;">
+🔒 CREATOR RESET
+</button>
+</div>
+</div>
     
 
 <script>
-const jumpSound = new Audio("jump.mp3");
-const eatSound = new Audio("eat.mp3");
-const hitSound = new Audio("hit.mp3");
-const levelSound = new Audio("levelup.mp3");
-const winSound = new Audio("win.mp3");
-
-const bgMusic = new Audio("bgmusic.mp3");
-bgMusic.loop = true;
-bgMusic.volume = 0.4;
     
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -291,6 +292,15 @@ let win = false;
 let obstacleTime = 1800;
 let foodTime = 2200;
 let baseSpeed = 5;
+
+let easyScore = Number(localStorage.getItem("easyScore")) || 0;
+let easyPlayer = localStorage.getItem("easyPlayer") || "Nobody";
+
+let normalScore = Number(localStorage.getItem("normalScore")) || 0;
+let normalPlayer = localStorage.getItem("normalPlayer") || "Nobody";
+
+let hardScore = Number(localStorage.getItem("hardScore")) || 0;
+let hardPlayer = localStorage.getItem("hardPlayer") || "Nobody";
 
 // Player
 const player = {
@@ -313,13 +323,6 @@ let foods = [];
 // Ground
 const groundY = 360;
 
-// Jump
-function jump(){
-    if(player.grounded && !gameOver){
-        player.vy = player.jumpPower;
-        player.grounded = false;
-    }
-}
 function showObjectives(){
 
     document.getElementById("mainMenu").style.display="none";
@@ -408,25 +411,109 @@ function drawPlayer(){
 
 // Background
 function drawBackground(){
-    // clouds
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(120,70,25,0,Math.PI*2);
-    ctx.arc(145,70,30,0,Math.PI*2);
-    ctx.arc(170,70,25,0,Math.PI*2);
-    ctx.fill();
 
-    ctx.beginPath();
-    ctx.arc(650,60,20,0,Math.PI*2);
-    ctx.arc(675,60,25,0,Math.PI*2);
-    ctx.arc(700,60,20,0,Math.PI*2);
-    ctx.fill();
+    // LEVEL 1 - Healthy Forest 🌳
+    if(level == 1){
 
-    // sun
-    ctx.fillStyle = '#FFD54F';
-    ctx.beginPath();
-    ctx.arc(780,70,40,0,Math.PI*2);
-    ctx.fill();
+        ctx.fillStyle = "#87CEEB";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+        // clouds
+        ctx.fillStyle="white";
+        ctx.beginPath();
+        ctx.arc(120,70,25,0,Math.PI*2);
+        ctx.arc(145,70,30,0,Math.PI*2);
+        ctx.arc(170,70,25,0,Math.PI*2);
+        ctx.fill();
+
+        // sun
+        ctx.fillStyle="#FFD54F";
+        ctx.beginPath();
+        ctx.arc(780,70,40,0,Math.PI*2);
+        ctx.fill();
+
+    }
+
+
+    // LEVEL 2 - Vegetable Farm 🥕
+    else if(level == 2){
+
+        ctx.fillStyle="#A5D6A7";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+
+        // farm fields
+        ctx.fillStyle="#66BB6A";
+        ctx.fillRect(0,280,canvas.width,80);
+
+
+        // vegetables
+        ctx.font="50px Arial";
+        ctx.fillText("🥕 🥦 🥕 🥦 🥕",100,250);
+
+    }
+
+
+    // LEVEL 3 - Healthy City 🏙️
+    else if(level == 3){
+
+        ctx.fillStyle="#90CAF9";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+
+        // buildings
+        ctx.fillStyle="#78909C";
+
+        ctx.fillRect(100,150,80,130);
+        ctx.fillRect(250,100,100,180);
+        ctx.fillRect(450,130,90,150);
+        ctx.fillRect(650,90,120,190);
+
+
+        ctx.font="50px Arial";
+        ctx.fillText("🏙️",400,80);
+
+    }
+
+
+    // LEVEL 4 - Nutrition Hero World 🦸
+    else if(level == 4){
+
+        ctx.fillStyle="#CE93D8";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+
+        ctx.font="80px Arial";
+        ctx.fillText("⭐",150,100);
+        ctx.fillText("💪",700,120);
+
+
+        ctx.fillStyle="#7E57C2";
+        ctx.fillRect(0,280,canvas.width,80);
+
+    }
+
+
+    // LEVEL 5 - Nutrition Champion Kingdom 👑
+    else if(level == 5){
+
+        ctx.fillStyle="#FFD54F";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+
+        ctx.font="100px Arial";
+        ctx.fillText("👑",400,120);
+
+
+        ctx.font="50px Arial";
+        ctx.fillText("🏆 ⭐ 🥦 ⭐ 🏆",200,230);
+
+
+        ctx.fillStyle="#43A047";
+        ctx.fillRect(0,300,canvas.width,60);
+
+    }
+
 }
 
 // Main game loop
@@ -468,9 +555,11 @@ function update(){
 
         if(collide(player,o)){
 
-    hitSound.play();
+     HitSound();
 
     gameOver = true;
+
+    saveHighScore();
 
     document.getElementById("resultText").innerHTML =
     "GAME OVER 😭";
@@ -493,8 +582,7 @@ function update(){
 
         if(collide(player,f)){
 
-    eatSound.currentTime = 0;
-    eatSound.play();
+    CollectSound();
 
     score += 10;
     foods.splice(i,1);
@@ -506,22 +594,19 @@ function update(){
         }
     }
 
-    // Increase difficulty
-    if(score > 0 && score % 50 === 0){
-        speed = 6 + Math.floor(score/50);
-    }
-
     document.getElementById('score').textContent = score;
+    
     if(score >= 2000){
-        winSound.play();
+       
 
-    gameOver = true;
+   gameOver = true;
+        return;
+    saveHighScore();
 
     document.getElementById("resultText").innerHTML =
     "YOU WIN! 🏆🎉<br>Nutrition Champion!";
-
     document.getElementById("message").style.display="block";
-}
+    }
 
 checkLevel();
 if(level == 2){
@@ -543,28 +628,15 @@ if(level == 5){
     requestAnimationFrame(update);
 }
 
-function restartGame(){
-    score = 0;
-    speed = 6;
-    level = 1;
-    gameOver = false;
-    obstacles = [];
-    foods = [];
 
-    player.y = 300;
-    player.vy = 0;
-
-    document.getElementById("level").textContent = 1;
-    document.getElementById('message').style.display = 'none';
-
-    update();
-}
 function checkLevel(){
 
     let oldLevel = level;
 
     if(score >= 2000){
         level = 5;
+        
+
     }
     else if(score >= 1500){
         level = 4;
@@ -582,8 +654,7 @@ function checkLevel(){
 
     if(level != oldLevel){
 
-        levelSound.currentTime = 0;
-        levelSound.play();
+        LevelUpSound();
 
         document.getElementById("levelUp").innerHTML =
         "LEVEL " + level + " UNLOCKED 🎉";
@@ -601,7 +672,7 @@ function checkLevel(){
 
 
     // increase speed
-   speed = baseSpeed + (level - 1) * 2;
+   speed = baseSpeed + (level - 1);
     }
 
 function showStart(){
@@ -628,15 +699,13 @@ function backMenu(){
     paused = false;
 
     document.getElementById("instructions").style.display="none";
-
     document.getElementById("startScreen").style.display="none";
-
     document.getElementById("mainMenu").style.display="block";
-
     document.getElementById("objectives").style.display="none";
+    document.getElementById("leaderboard").style.display="none";
 
 
-    // reset game
+    // Reset game
     score = 0;
     level = 1;
     speed = 6;
@@ -644,40 +713,109 @@ function backMenu(){
     obstacles = [];
     foods = [];
 
+
     document.getElementById("score").textContent = 0;
     document.getElementById("level").textContent = 1;
+
+
+    // RESET PLAYER NAME
+    playerName = "";
+
+    // CLEAR NAME INPUT BOX
+    document.getElementById("playerName").value = "";
+
+
+    // Reset player display
+    document.getElementById("info").innerHTML =
+    "Player: Guest <br>" +
+    "Score: <span id='score'>0</span>" +
+    " | Level: <span id='level'>1</span>";
+
+}
+function saveHighScore(){
+
+    if(difficulty=="easy"){
+
+        if(score > easyScore){
+
+            easyScore = score;
+            easyPlayer = playerName;
+
+            localStorage.setItem("easyScore",score);
+            localStorage.setItem("easyPlayer",playerName);
+
+        }
+
+    }
+
+
+    else if(difficulty=="medium"){
+
+        if(score > normalScore){
+
+            normalScore = score;
+            normalPlayer = playerName;
+
+            localStorage.setItem("normalScore",score);
+            localStorage.setItem("normalPlayer",playerName);
+
+        }
+
+    }
+
+
+    else if(difficulty=="hard"){
+
+        if(score > hardScore){
+
+            hardScore = score;
+            hardPlayer = playerName;
+
+            localStorage.setItem("hardScore",score);
+            localStorage.setItem("hardPlayer",playerName);
+
+        }
+
+    }
+
 }
 
 
-
 function restartGame(){
-    
-    bgMusic.currentTime = 0;
-    bgMusic.play();
-    
-    score = 0;
-    speed = 6;
-    level = 1;
 
+    // Reset score and level
+    score = 0;
+    level = 1;
+    speed = baseSpeed;
+
+    // Reset game status
     gameOver = false;
     paused = false;
 
+    // Clear objects
     obstacles = [];
     foods = [];
 
+    // Reset player position
     player.y = 300;
     player.vy = 0;
+    player.grounded = true;
 
-
+    // Reset display
     document.getElementById("score").textContent = 0;
     document.getElementById("level").textContent = 1;
 
+    // Hide game over message
+    document.getElementById("message").style.display = "none";
 
-    document.getElementById("message").style.display="none";
-    
+    // Reset pause button
+    document.getElementById("pauseBtn").innerHTML = "⏸️ PAUSE";
 
+    // Start spawning again
+    startSpawning();
+
+    // Start game loop
     update();
-
 }
 function startGame(){
 
@@ -706,18 +844,17 @@ else{
     baseSpeed = 12;
     obstacleTime = 800;
     foodTime = 1200;
-}
+}   
 
 speed = baseSpeed;
-
 
     document.getElementById("startScreen").style.display="none";
 
 
     document.getElementById("info").innerHTML =
-    "Player: " + playerName +
-    "<br>Score: <span id='score'>0</span>" +
-    " | Level: <span id='level'>1</span>";
+"Player: " + playerName +
+"<br>Score: <span id='score'>0</span>" +
+" | Level: <span id='level'>1</span>";
 
 
     startSpawning();
@@ -742,14 +879,134 @@ function pauseGame(){
 
     if(player.grounded && !gameOver){
 
-        jumpSound.currentTime = 0;
-        jumpSound.play();
+        JumpSound(); // 🔊 cartoon jump
 
         player.vy = player.jumpPower;
         player.grounded = false;
+
     }
 }
+function showLeaderboard(){
 
+    document.getElementById("mainMenu").style.display="none";
+
+    document.getElementById("leaderboard").style.display="block";
+
+
+    document.getElementById("easyHigh").textContent = easyScore;
+    document.getElementById("easyName").textContent = easyPlayer;
+
+
+    document.getElementById("normalHigh").textContent = normalScore;
+    document.getElementById("normalName").textContent = normalPlayer;
+
+
+    document.getElementById("hardHigh").textContent = hardScore;
+    document.getElementById("hardName").textContent = hardPlayer;
+
+}
+function creatorReset(){
+
+    let password = prompt("Enter Creator Password:");
+
+    if(password === "081209"){
+
+        localStorage.removeItem("easyScore");
+        localStorage.removeItem("easyPlayer");
+
+        localStorage.removeItem("normalScore");
+        localStorage.removeItem("normalPlayer");
+
+        localStorage.removeItem("hardScore");
+        localStorage.removeItem("hardPlayer");
+
+
+        easyScore = 0;
+        easyPlayer = "Nobody";
+
+        normalScore = 0;
+        normalPlayer = "Nobody";
+
+        hardScore = 0;
+        hardPlayer = "Nobody";
+
+
+        document.getElementById("easyHigh").textContent = 0;
+        document.getElementById("easyName").textContent = "Nobody";
+
+        document.getElementById("normalHigh").textContent = 0;
+        document.getElementById("normalName").textContent = "Nobody";
+
+        document.getElementById("hardHigh").textContent = 0;
+        document.getElementById("hardName").textContent = "Nobody";
+
+
+        alert("✅ Creator successfully reset the leaderboard!");
+
+            location.reload();
+
+    }
+    else{
+
+        alert("❌ Wrong password! Reset denied.");
+
+    }
+
+}
+function JumpSound(){
+    let audio = new AudioContext();
+    let osc = audio.createOscillator();
+
+    osc.type = "square";
+    osc.frequency.setValueAtTime(400, audio.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, audio.currentTime + 0.2);
+
+    osc.connect(audio.destination);
+    osc.start();
+    osc.stop(audio.currentTime + 0.2);
+}
+
+
+function CollectSound(){
+    let audio = new AudioContext();
+    let osc = audio.createOscillator();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(600, audio.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1000, audio.currentTime + 0.3);
+
+    osc.connect(audio.destination);
+    osc.start();
+    osc.stop(audio.currentTime + 0.3);
+}
+
+
+function HitSound(){
+    let audio = new AudioContext();
+    let osc = audio.createOscillator();
+
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(200, audio.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(50, audio.currentTime + 0.3);
+
+    osc.connect(audio.destination);
+    osc.start();
+    osc.stop(audio.currentTime + 0.3);
+}
+
+
+function LevelUpSound(){
+    let audio = new AudioContext();
+    let osc = audio.createOscillator();
+
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(500, audio.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200, audio.currentTime + 0.5);
+
+    osc.connect(audio.destination);
+    osc.start();
+    osc.stop(audio.currentTime + 0.5);
+}
 </script>
 
 </body>
