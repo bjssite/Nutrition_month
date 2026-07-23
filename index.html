@@ -254,8 +254,24 @@ canvas{
 </button>
 
 </div>
+    jump.mp3
+eat.mp3
+hit.mp3
+levelup.mp3
+win.mp3
+    
 
 <script>
+const jumpSound = new Audio("jump.mp3");
+const eatSound = new Audio("eat.mp3");
+const hitSound = new Audio("hit.mp3");
+const levelSound = new Audio("levelup.mp3");
+const winSound = new Audio("win.mp3");
+
+const bgMusic = new Audio("bgmusic.mp3");
+bgMusic.loop = true;
+bgMusic.volume = 0.4;
+    
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const playerImg = new Image();
@@ -274,6 +290,7 @@ let win = false;
 
 let obstacleTime = 1800;
 let foodTime = 2200;
+let baseSpeed = 5;
 
 // Player
 const player = {
@@ -450,12 +467,15 @@ function update(){
         ctx.fillText(o.emoji, o.x, o.y + 40);
 
         if(collide(player,o)){
+
+    hitSound.play();
+
     gameOver = true;
 
     document.getElementById("resultText").innerHTML =
     "GAME OVER 😭";
 
-    document.getElementById('message').style.display = 'block';
+    document.getElementById("message").style.display="block";
 }
         if(o.x + o.w < 0){
             obstacles.splice(i,1);
@@ -472,10 +492,14 @@ function update(){
         ctx.fillText(f.emoji, f.x, f.y + 30);
 
         if(collide(player,f)){
-            score += 10;
-            foods.splice(i,1);
-            continue;
-        }
+
+    eatSound.currentTime = 0;
+    eatSound.play();
+
+    score += 10;
+    foods.splice(i,1);
+    continue;
+    }
 
         if(f.x + f.w < 0){
             foods.splice(i,1);
@@ -488,7 +512,8 @@ function update(){
     }
 
     document.getElementById('score').textContent = score;
-    if(score >= 5000){
+    if(score >= 2000){
+        winSound.play();
 
     gameOver = true;
 
@@ -557,6 +582,9 @@ function checkLevel(){
 
     if(level != oldLevel){
 
+        levelSound.currentTime = 0;
+        levelSound.play();
+
         document.getElementById("levelUp").innerHTML =
         "LEVEL " + level + " UNLOCKED 🎉";
 
@@ -573,7 +601,7 @@ function checkLevel(){
 
 
     // increase speed
-    speed = 5 + level * 2;
+   speed = baseSpeed + (level - 1) * 2;
     }
 
 function showStart(){
@@ -623,7 +651,10 @@ function backMenu(){
 
 
 function restartGame(){
-
+    
+    bgMusic.currentTime = 0;
+    bgMusic.play();
+    
     score = 0;
     speed = 6;
     level = 1;
@@ -643,7 +674,7 @@ function restartGame(){
 
 
     document.getElementById("message").style.display="none";
-
+    
 
     update();
 
@@ -662,22 +693,22 @@ function startGame(){
 
 
     if(difficulty=="easy"){
-        speed = 5;
-        obstacleTime = 2000;
-        foodTime = 2500;
-    }
+    baseSpeed = 5;
+    obstacleTime = 2000;
+    foodTime = 2500;
+}
+else if(difficulty=="medium"){
+    baseSpeed = 8;
+    obstacleTime = 1300;
+    foodTime = 1800;
+}
+else{
+    baseSpeed = 12;
+    obstacleTime = 800;
+    foodTime = 1200;
+}
 
-    else if(difficulty=="medium"){
-        speed = 8;
-        obstacleTime = 1300;
-        foodTime = 1800;
-    }
-
-    else if(difficulty=="hard"){
-        speed = 12;
-        obstacleTime = 800;
-        foodTime = 1200;
-    }
+speed = baseSpeed;
 
 
     document.getElementById("startScreen").style.display="none";
@@ -705,6 +736,17 @@ function pauseGame(){
     }
     else{
         btn.innerHTML = "⏸️ PAUSE";
+    }
+}
+ function jump(){
+
+    if(player.grounded && !gameOver){
+
+        jumpSound.currentTime = 0;
+        jumpSound.play();
+
+        player.vy = player.jumpPower;
+        player.grounded = false;
     }
 }
 
