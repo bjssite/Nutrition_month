@@ -15,6 +15,7 @@
     touch-action:none;
      user-select:none;
     -webkit-user-select:none;
+    background-color: #1b5e20;
 }
 
 canvas{
@@ -80,10 +81,12 @@ canvas{
             margin: 5px;
         }
 
-        #controls {
-            text-align: center;
-            margin-top: 10px;
-        }
+        #controls{
+    position:absolute;
+    top:10px;
+    right:20px;
+    z-index:999;
+}
 
         #pauseBtn {
             font-size: 25px;
@@ -129,15 +132,11 @@ canvas{
 #leaderboard h3{
     font-size:22px;
 }
-#controls,
-#info{
-    display:none;
-}
+
 
     </style>
 </head>
 
-<body>
 
     <div id="message">
         <span id="resultText">GAME OVER</span><br>
@@ -185,10 +184,6 @@ canvas{
 
     <button id="pauseBtn" onclick="pauseGame()">
         ⏸️ PAUSE
-    </button>
-
-    <button onclick="fullscreenGame()">
-        📱 FULLSCREEN
     </button>
 
 </div>
@@ -312,6 +307,7 @@ canvas{
 
 
     <script>
+        
 
         const canvas = document.getElementById('game');
         const ctx = canvas.getContext('2d');
@@ -326,7 +322,7 @@ playerImg.onerror=function(){
 };
 
         playerImg.src = "coco.png";
-
+        
         let score = 0;
         let gameOver = false;
         let speed = 6;
@@ -351,6 +347,10 @@ playerImg.onerror=function(){
 
         let hardScore = Number(localStorage.getItem("hardScore")) || 0;
         let hardPlayer = localStorage.getItem("hardPlayer") || "Nobody";
+
+        
+
+
 
         // Player
         const player = {
@@ -628,15 +628,23 @@ canvas.addEventListener("pointerdown", function(){
         }
 
         // Main game loop
-       function update(){
+     function update(){
 
     if(gameOver){
         return;
     }
 
+
+    // PAUSE SYSTEM
     if(paused){
+
+        drawPauseScreen();
+
+        animationID = requestAnimationFrame(update);
+
         return;
     }
+
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
@@ -656,7 +664,30 @@ canvas.addEventListener("pointerdown", function(){
         player.grounded = true;
 
     }
+function drawPauseScreen(){
 
+    // dark overlay
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    // pause text
+    ctx.fillStyle = "white";
+    ctx.font = "50px Arial";
+    ctx.textAlign = "center";
+
+    ctx.fillText(
+        "⏸ GAME PAUSED",
+        canvas.width / 2,
+        canvas.height / 2
+    );
+
+}
             
 
             drawPlayer();
@@ -744,8 +775,28 @@ canvas.addEventListener("pointerdown", function(){
                 console.log("LEVEL 5: Nutrition Champion 👑");
             }
 
-            requestAnimationFrame(update);
+           animationID = requestAnimationFrame(update);
         }
+        function drawPauseScreen(){
+
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    ctx.fillStyle = "white";
+    ctx.font = "50px Arial";
+    ctx.textAlign = "center";
+
+    ctx.fillText(
+        "⏸ GAME PAUSED",
+        canvas.width/2,
+        canvas.height/2
+    );
+}
 
 
         function checkLevel() {
@@ -1000,9 +1051,12 @@ function resetPlayer(){
             speed = baseSpeed;
 
             document.getElementById("startScreen").style.display = "none";
-            document.getElementById("controls").style.display="block";
-            document.getElementById("info").style.display="block";
+           document.getElementById("controls").style.display="block";
+            document.getElementById("controls").style.position="absolute";
+            document.getElementById("controls").style.top="10px";
+            document.getElementById("controls").style.right="20px";
 
+document.getElementById("info").style.display="block";
             document.getElementById("info").innerHTML =
                     `
             Player: ${playerName}<br>
@@ -1021,30 +1075,41 @@ function resetPlayer(){
 
         }
 
-        function pauseGame() {
+        function pauseGame(){
 
-            paused = !paused;
+    paused = !paused;
 
-            let btn = document.getElementById("pauseBtn");
+    let btn = document.getElementById("pauseBtn");
 
-            if (paused) {
-                btn.innerHTML = "▶️ CONTINUE";
-            }
-            else {
-                btn.innerHTML = "⏸️ PAUSE";
-            }
-        }
-        function jump() {
+    if(paused){
 
-            if (player.grounded && !gameOver) {
+        btn.innerHTML = "▶️ CONTINUE";
 
-                JumpSound(); // 🔊 cartoon jump
+    }else{
 
-                player.vy = player.jumpPower;
-                player.grounded = false;
+        btn.innerHTML = "⏸️ PAUSE";
 
-            }
-        }
+    }
+
+}
+       function jump(){
+
+    if(gameOver || paused){
+        return;
+    }
+
+
+    if(player.grounded || unlimitedJump){
+
+        JumpSound();
+
+        player.vy = player.jumpPower;
+
+        player.grounded = false;
+
+    }
+
+}
         function showLeaderboard() {
 
             document.getElementById("mainMenu").style.display = "none";
@@ -1166,15 +1231,57 @@ function resetPlayer(){
             osc.start();
             osc.stop(audio.currentTime + 0.5);
         }
-        function fullscreenGame(){
+    
+let adminMode = false;
 
-if(document.documentElement.requestFullscreen){
+let unlimitedJump = false;
 
-document.documentElement.requestFullscreen();
 
-}
+document.addEventListener("keydown", function(e){
 
-}
+    if(e.ctrlKey && e.shiftKey && e.key.toLowerCase()=="a"){
+
+        let password = prompt("🔒 Secret Admin Password:");
+
+        if(password === "081209"){
+
+            adminMode = true;
+
+            alert("👑 Secret Admin Mode Activated!");
+
+        }
+        else{
+
+            alert("❌ Access Denied!");
+
+        }
+
+    }
+
+});
+document.addEventListener("keydown", function(e){
+
+    // Block cheats if not admin
+    if(!adminMode){
+        return;
+    }
+
+
+    // Unlimited Jump
+    if(e.key.toLowerCase()=="u"){
+
+        unlimitedJump = !unlimitedJump;
+
+        alert(
+            unlimitedJump ?
+            "🚀 Unlimited Jump ON":
+            "🚫 Unlimited Jump OFF"
+        );
+
+    }
+
+});
+
     </script>
 
 </body>
